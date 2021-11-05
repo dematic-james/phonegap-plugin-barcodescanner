@@ -10,8 +10,6 @@
 
         var exec = cordova.require("cordova/exec");
 
-        var scanInProgress = false;
-
         /**
          * Constructor.
          *
