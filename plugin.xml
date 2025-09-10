@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<plugin xmlns="http://www.phonegap.com/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android" xmlns:rim="http://www.blackberry.com/ns/widgets" id="phonegap-plugin-barcodescanner" version="8.1.2-dev">
+<plugin xmlns="http://www.phonegap.com/ns/plugins/1.0"
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:rim="http://www.blackberry.com/ns/widgets" id="phonegap-plugin-barcodescanner" version="8.2.0-dev">
   <name>BarcodeScanner</name>
   <description>You can use the BarcodeScanner plugin to scan different types of barcodes (using the device's camera) and get the metadata encoded in them for processing within your application.</description>
   <license>MIT</license>
@@ -9,10 +11,10 @@
     <engine name="cordova" version=">=7.1.0"/>
     <engine name="cordova-android" version=">=6.3.0"/>
   </engines>
-  <js-module src="www/barcodescanner.js" name="BarcodeScanner">
-    <clobbers target="cordova.plugins.barcodeScanner"/>
-  </js-module>
   <platform name="ios">
+    <js-module src="www/barcodescanner.js" name="BarcodeScanner">
+      <clobbers target="cordova.plugins.barcodeScanner"/>
+    </js-module>
     <config-file target="config.xml" parent="/*">
       <feature name="BarcodeScanner">
         <param name="ios-package" value="CDVBarcodeScanner"/>
@@ -26,6 +28,9 @@
     <framework src="AudioToolbox.framework" />
   </platform>
   <platform name="android">
+    <js-module src="www/barcodescanner.js" name="BarcodeScanner">
+      <clobbers target="cordova.plugins.barcodeScanner"/>
+    </js-module>
     <source-file src="src/android/com/phonegap/plugins/barcodescanner/BarcodeScanner.java" target-dir="src/com/phonegap/plugins/barcodescanner"/>
     <config-file target="res/xml/config.xml" parent="/*">
       <feature name="BarcodeScanner">
@@ -47,6 +52,9 @@
     <preference name="ANDROID_SUPPORT_V4_VERSION" default="27.+"/>
   </platform>
   <platform name="windows">
+    <js-module src="www/barcodescanner.js" name="BarcodeScanner">
+      <clobbers target="cordova.plugins.barcodeScanner"/>
+    </js-module>
     <js-module src="src/windows/BarcodeScannerProxy.js" name="BarcodeScannerProxy">
       <merges target=""/>
     </js-module>
@@ -60,15 +68,5 @@
     <asset src="src/windows/assets/plugin-barcodeScanner.css" target="css/plugin-barcodeScanner.css"/>
     <hook src="hooks/windows/check-arch.js" type="before_compile"/>
     <hook src="hooks/windows/check-arch.js" type="before_run"/>
-  </platform>
-  <platform name="browser">
-    <config-file target="config.xml" parent="/*">
-      <feature name="BarcodeScanner">
-        <param name="browser-package" value="BarcodeScanner"/>
-      </feature>
-    </config-file>
-    <js-module src="src/browser/BarcodeScannerProxy.js" name="BarcodeScannerProxy">
-      <runs/>
-    </js-module>
   </platform>
 </plugin>
