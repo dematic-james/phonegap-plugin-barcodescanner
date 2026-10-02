@@ -10,6 +10,21 @@
 #import <AssetsLibrary/AssetsLibrary.h>
 #import <Cordova/CDVPlugin.h>
 
+static AVCaptureDevice* CDVBarcodeCaptureDevice(AVCaptureDevicePosition position)
+{
+    AVCaptureDevice* device = [AVCaptureDevice defaultDeviceWithDeviceType:AVCaptureDeviceTypeBuiltInWideAngleCamera
+                                                                  mediaType:AVMediaTypeVideo
+                                                                   position:position];
+    if (device != nil) {
+        return device;
+    }
+
+    AVCaptureDeviceDiscoverySession* discovery = [AVCaptureDeviceDiscoverySession discoverySessionWithDeviceTypes:@[AVCaptureDeviceTypeBuiltInWideAngleCamera]
+                                                                                                        mediaType:AVMediaTypeVideo
+                                                                                                         position:position];
+    return discovery.devices.firstObject;
+}
+
 
 //------------------------------------------------------------------------------
 // Delegate to handle orientation functions
@@ -187,6 +202,22 @@
       NSString * error = NSLocalizedString(@"NSCameraUsageDescription is not set in the info.plist", nil);
       [self returnError:error callback:callback];
       return;
+    }
+
+    AVAuthorizationStatus authStatus = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
+    if (authStatus == AVAuthorizationStatusNotDetermined) {
+        __weak CDVBarcodeScanner* weakSelf = self;
+        [AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo completionHandler:^(BOOL granted) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if (!granted) {
+                    NSString* error = NSLocalizedString(@"Access to the camera has been prohibited; please enable it in the Settings app to continue.", nil);
+                    [weakSelf returnError:error callback:callback];
+                    return;
+                }
+                [weakSelf scan:command];
+            });
+        }];
+        return;
     }
 
     processor = [[CDVbcsProcessor alloc]
@@ -371,7 +402,7 @@ parentViewController:(UIViewController*)parentViewController
     [self.parentViewController dismissViewControllerAnimated:self.isTransitionAnimated completion:callbackBlock];
 
 
-    AVCaptureDevice *device = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+    AVCaptureDevice *device = CDVBarcodeCaptureDevice(AVCaptureDevicePositionBack);
     [device lockForConfiguration:nil];
     if([device isAutoFocusRangeRestrictionSupported]) {
         [device setAutoFocusRangeRestriction:AVCaptureAutoFocusRangeRestrictionNone];
@@ -462,7 +493,7 @@ parentViewController:(UIViewController*)parentViewController
 }
 
 - (void)toggleTorch {
-  AVCaptureDevice *device = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+  AVCaptureDevice *device = CDVBarcodeCaptureDevice(AVCaptureDevicePositionBack);
   [device lockForConfiguration:nil];
   if (device.flashActive) {
     [device setTorchMode:AVCaptureTorchModeOff];
@@ -481,20 +512,9 @@ parentViewController:(UIViewController*)parentViewController
     AVCaptureSession* captureSession = [[AVCaptureSession alloc] init];
     self.captureSession = captureSession;
 
-       AVCaptureDevice* __block device = nil;
-    if (self.isFrontCamera) {
-
-        NSArray* devices = [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
-        [devices enumerateObjectsUsingBlock:^(AVCaptureDevice *obj, NSUInteger idx, BOOL *stop) {
-            if (obj.position == AVCaptureDevicePositionFront) {
-                device = obj;
-            }
-        }];
-    } else {
-        device = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
-        if (!device) return @"unable to obtain video capture device";
-
-    }
+    AVCaptureDevicePosition cameraPosition = self.isFrontCamera ? AVCaptureDevicePositionFront : AVCaptureDevicePositionBack;
+    AVCaptureDevice* device = CDVBarcodeCaptureDevice(cameraPosition);
+    if (!device) return @"unable to obtain video capture device";
 
     // set focus params if available to improve focusing
     [device lockForConfiguration:&error];
@@ -913,7 +933,7 @@ parentViewController:(UIViewController*)parentViewController
 #endif
 
     if (_processor.isShowTorchButton && !_processor.isFrontCamera) {
-      AVCaptureDevice *device = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+      AVCaptureDevice *device = CDVBarcodeCaptureDevice(AVCaptureDevicePositionBack);
       if ([device hasTorch] && [device hasFlash]) {
         NSURL *bundleURL = [[NSBundle mainBundle] URLForResource:@"CDVBarcodeScanner" withExtension:@"bundle"];
         NSBundle *bundle = [NSBundle bundleWithURL:bundleURL];
