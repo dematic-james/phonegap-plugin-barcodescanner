@@ -784,7 +784,7 @@ parentViewController:(UIViewController*)parentViewController
 - (void)viewWillAppear:(BOOL)animated {
 
     // set video orientation to what the camera sees
-    self.processor.previewLayer.connection.videoOrientation = [self interfaceOrientationToVideoOrientation:[UIApplication sharedApplication].statusBarOrientation];
+    self.processor.previewLayer.connection.videoOrientation = [self interfaceOrientationToVideoOrientation:[self currentInterfaceOrientation]];
 
     // this fixes the bug when the statusbar is landscape, and the preview layer
     // starts up in portrait (not filling the whole view)
@@ -799,7 +799,7 @@ parentViewController:(UIViewController*)parentViewController
     previewLayer.videoGravity = AVLayerVideoGravityResizeAspectFill;
 
     if ([previewLayer.connection isVideoOrientationSupported]) {
-        previewLayer.connection.videoOrientation = [self interfaceOrientationToVideoOrientation:[UIApplication sharedApplication].statusBarOrientation];
+        previewLayer.connection.videoOrientation = [self interfaceOrientationToVideoOrientation:[self currentInterfaceOrientation]];
     }
 
     [self.view.layer insertSublayer:previewLayer below:[[self.view.layer sublayers] objectAtIndex:0]];
@@ -808,6 +808,14 @@ parentViewController:(UIViewController*)parentViewController
     [self startCapturing];
 
     [super viewDidAppear:animated];
+}
+
+- (UIInterfaceOrientation)currentInterfaceOrientation {
+    UIWindowScene* scene = self.processor.parentViewController.view.window.windowScene;
+    if (scene != nil) {
+        return scene.interfaceOrientation;
+    }
+    return UIInterfaceOrientationPortrait;
 }
 
 - (AVCaptureVideoOrientation)interfaceOrientationToVideoOrientation:(UIInterfaceOrientation)orientation {
@@ -1024,7 +1032,7 @@ parentViewController:(UIViewController*)parentViewController
 
 - (UIInterfaceOrientation)preferredInterfaceOrientationForPresentation
 {
-    return [[UIApplication sharedApplication] statusBarOrientation];
+    return [self currentInterfaceOrientation];
 }
 
 - (NSUInteger)supportedInterfaceOrientations
